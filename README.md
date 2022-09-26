@@ -3,7 +3,8 @@ Lib2Lib is a simple application where you can write, read and share your stories
 
 # Screenshots
 The example of post:
-![](https://github.com/script.sh/usof-backend/raw/main/https://lh3.googleusercontent.com/efTlmQ3s1NRdLoTqf_ulXyTJjJyCFta5v0R9-2cgzlwjNgOsGmmCUwDYn7o8g8EDI2jW4XO7NgPtl8whq9mTZsDaaQJJOK4-1T1dDdllEBebZt7Z9fUDw8fQCbeyzT_EWA=w1280)
+![photo_2022-09-26_21-39-44](https://user-images.githubusercontent.com/105050372/192383774-18c4fc45-3695-442e-a5c9-240ece0e8b36.jpg)
+
 
 Get users:
 ![](https://lh4.googleusercontent.com/RZEO4QCwvMJdTbOC2Vw1jKn1MkJbECvyxvG7f4fu4zRcK4FxffW89PdLdyFKxp8pcz2raVfU2zzYUlCBcv-0gGoJHAQcUJwV_1MDs3T7D_QqzGq-Y5-o7xwocNLQ7ENuRQ=w1280)
