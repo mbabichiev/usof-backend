@@ -31,7 +31,7 @@ Get comments by post id:
 
 First of all, clone the repository. To do this, enter the desired directory and write in the console:
 ```bash
-git clone git@gitlab.ucode.world:connect-khpi/connect-fullstack-usof-backend/mbabichiev.git
+git clone https://github.com/scriptsh/usof-backend.git
 ```
 
 After that install all libraries:
