@@ -134,6 +134,18 @@ exports.updatePostById = async function (request, response) {
 }
 
 
+exports.updatePostPhotoById = async function(request, response) {
+
+    let id = request.params.id;
+
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
+    
+
+}
+
+
 exports.deletePostById = async function (request, response) {
 
     let id = request.params.id;

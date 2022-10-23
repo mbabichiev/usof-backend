@@ -1,13 +1,15 @@
-const UserService = require("../services/userService.js")
+const UserService = require("../services/userService.js");
 const User = require("../models/user.js");
 const fs = require("fs");
 const PostService = require("../services/postService.js");
 
-const PostMapper = require("../utils/PostMapper")
+const PostMapper = require("../utils/PostMapper");
+const PhotoUploader = require("../utils/PhotoUploader");
 
 let userService = new UserService();
 let postService = new PostService();
 let postMapper = new PostMapper();
+let photoUploader = new PhotoUploader();
 
 
 exports.createUser = async function (request, response) {
@@ -107,28 +109,16 @@ exports.getUserAvatarById = function(request, response) {
         return response.status(400).send();
     }
 
-    let dir = 'avatars'
-    let path = `${dir}/no_avatar.png`;
-
-    if(fs.existsSync(`${dir}/${id}.jpg`)) {
-        path = `${dir}/${id}.jpg`;
-    }
-    else if(fs.existsSync(`${dir}/${id}.png`)) {
-        path = `${dir}/${id}.png`;
-    }
-    else if(fs.existsSync(`${dir}/${id}.jpeg`)) {
-        path = `${dir}/${id}.jpeg`;
-    }
+    let path = photoUploader.getUserAvatarPathById(id);
 
     fs.readFile(path, function(err, data) {
-
         if(!err) {
             response.status(200).end(data)
         }
         else {
             console.log(err);
+            response.status(500).end()
         }
-
     })
 }
 
@@ -155,15 +145,6 @@ exports.getAllPostsByUserId = async function (request, response) {
 }
 
 
-function deleteFile(file) {
-    console.log("Delete file: " + file)
-
-    fs.unlink(file, err => {
-        if(err) throw err; 
-    });
-}
-
-
 exports.uploadAvatar = function (request, response) {
 
     if (!request.files || Object.keys(request.files).length === 0) {
@@ -176,36 +157,47 @@ exports.uploadAvatar = function (request, response) {
         return response.status(400).send();
     }
 
-    let sampleFile = request.files.file;
-    let fileFormat = sampleFile.name.split('.').pop();
+    let status = photoUploader.uploadAvatar(id, request.files.file);
 
-    if(fileFormat != 'jpg' && fileFormat != 'png' && fileFormat != 'jpeg') {
-        return response.status(400).send("Avatar should be only .jpg, .png or .jpeg")
+    if(status === 0) {
+        return response.status(200).send();
     }
-
-    let dir = 'avatars'
-
-    if(fs.existsSync(`${dir}/${id}.jpg`)) {
-        deleteFile(`${dir}/${id}.jpg`);
+    else if(status === -1) {
+        return response.status(400).send("Avatar should be only .jpg, .png or .jpeg");
     }
-    else if(fs.existsSync(`${dir}/${id}.png`)) {
-        deleteFile(`${dir}/${id}.png`);
+    else {
+        return response.status(500).send()
     }
-    else if(fs.existsSync(`${dir}/${id}.jpeg`)) {
-        deleteFile(`${dir}/${id}.jpeg`);
-    }
-    
-    sampleFile.mv(`avatars/${id}.${fileFormat}`, function(err) {
-
-        if (err) {
-            console.log(err);
-            return response.status(500).send();
-        }
-    
-        response.status(200).send();
-    });
-
 }
+
+
+exports.getDefaultAvatar = async function (request, response) {
+    let path = 'avatars/no_avatar.png';
+
+    fs.readFile(path, function(err, data) {
+        if(!err) {
+            response.status(200).end(data)
+        }
+        else {
+            console.log(err);
+            response.status(500).end()
+        }
+    })
+}
+
+
+exports.deleteAvatarById = async function (request, response) {
+
+    let id = request.params.id;
+
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
+    photoUploader.deleteAvatarById(id);
+
+    response.status(200).end()
+}
+
 
 
 exports.updateUser = async function (request, response) {
