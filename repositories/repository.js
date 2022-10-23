@@ -5,25 +5,25 @@ class Repository {
 
     async createStatement(statement) {
 
-        this.connection = mysql.createConnection({ 
+        let connection = mysql.createConnection({ 
             host     : config.db.host,
             user     : config.db.user,
             password : config.db.password,
             database : config.db.database
         });
 
-        this.connection.connect();
+        connection.connect();
         let result;
 
         try {
-            result = await this.connection.promise().query(statement);
+            result = await connection.promise().query(statement);
         } 
         catch (err) {
             console.error(err)
             return -1;
         }
 
-        this.connection.end();
+        connection.end();
 
         return result;
 

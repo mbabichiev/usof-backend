@@ -74,6 +74,21 @@ exports.createLikeByCommentId = async function(request, response) {
 }
 
 
+exports.checkForLikeByCommentId = async function(request, response) {
+
+    let comment_id = request.params.id;
+
+    if(!request.body.author_id) {
+        return response.status(400).send("author_id is null");
+    }
+
+    let data = await likeService.getLikeIfExistByCommentId(request.body.author_id, comment_id);
+
+    response.status(200).send(data);
+}
+
+
+
 exports.getAllCommentsByPostId = async function(request, response) {
 
     let id = request.params.id;
@@ -91,11 +106,16 @@ exports.getAllCommentsByPostId = async function(request, response) {
 
         var user = await userService.getUserById(data[i].author_id)
 
-        // get all likes and dislikes
+        var likes = await likeService.getNumOfLikesByCommentId(data[i].id)
+        var dislikes = await likeService.getNumOfDislikesByCommentId(data[i].id)
 
         comments.push({
+                id: data[i].id,
+                author_id: data[i].author_id,
                 author: user.full_name,
-                publish_date: new Date(data[i].publish_date).toLocaleString(),
+                publish_date: data[i].publish_date,
+                likes: likes.total,
+                dislikes: dislikes.total,
                 content: data[i].content
             });
     }

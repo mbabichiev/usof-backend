@@ -22,7 +22,8 @@ exports.create = async function (request, response){
         ));
 
     if(status == 0) {
-        response.status(201).send()
+        let is = await userService.getUserIdByLogin(request.body.login);
+        response.status(201).send("id=" + is)
     }
     else if(status == -1) {
         response.status(400).send("User has null data")
@@ -51,7 +52,8 @@ exports.checkLoginAndPassword = async function (request, response) {
         response.status(400).send("Wrong password")
     }
     else {
-        response.status(200).send()
+        let id = await userService.getUserIdByLogin(request.body.login);
+        response.status(200).send("id=" + id)
     }
 }
 
@@ -152,7 +154,7 @@ exports.passwordResetWithToken = async function (request, response){
 
     if(status == 0) {
         await tokenService.deleteTokenById(id);
-        response.status(202).send();
+        response.status(202).send("id=" + id);
         return;
     }
     

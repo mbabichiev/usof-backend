@@ -1,12 +1,13 @@
 const PostRepository = require("../repositories/postRepository.js")
 const CategoryService = require("../services/categoryService.js")
+const UserService = require("../services/userService");
 
 class PostService {
 
     constructor() {
         this.postRepository = new PostRepository();
-
         this.categoryService = new CategoryService();
+        this.userService = new UserService();
     }
 
 
@@ -101,6 +102,113 @@ class PostService {
 
         return rows[0];
 
+    }
+
+
+    async getAmountPostsByUserId(id) {
+
+        console.log("Get amout of posts by user with id: " + id);
+
+        if(await this.userService.checkIfUserExistById(id) === false) {
+            console.log("User not found")
+            return -1;
+        }
+
+        let statement = `SELECT count(*) AS total FROM posts WHERE author_id=${id};`
+
+        let [rows, fields] = await this.postRepository.createStatement(statement);
+
+        return rows[0];
+    }
+
+
+    async getAllPostByUserId(id) {
+
+        console.log("Get all posts by user with id: " + id);
+
+        if(await this.userService.checkIfUserExistById(id) === false) {
+            console.log("User not found")
+            return -1;
+        }
+
+        let statement = `SELECT * FROM posts WHERE author_id=${id};`
+
+        let [rows, fields] = await this.postRepository.createStatement(statement);
+
+        return rows;
+    }
+
+
+    async getPostsByLimitAndPage(limit, page) {
+        console.log(`Get posts with limit ${limit} on page ${page}`);
+
+        let statement = `SELECT * FROM posts LIMIT ${limit} OFFSET ${limit * page - limit};`
+
+        let [rows, fields] = await this.postRepository.createStatement(statement);
+
+        return rows;
+
+    }
+
+
+    async getFavouriveCategoryByUserId(id) {
+
+        console.log("Get favourite category with user id: " + id);
+
+        if(await this.userService.checkIfUserExistById(id) === false) {
+            console.log("User not found")
+            return -1;
+        }
+
+        let posts = await this.getAllPostByUserId(id);
+
+        if(posts.length === 0) {
+            return null
+        }
+        else if(posts.length === 1) {
+            // get first category of post
+            return posts[0].categories.split(',')[0];
+        }
+        else {
+            let categoriesObj = [];
+
+            for(var i = 0; posts[i]; i++) {
+
+                let categories = posts[i].categories.split(',');
+
+                for(var j = 0; categories[j]; j++) {
+
+                    var exist = false;
+
+                    for(var k = 0; categoriesObj[k]; k++) {
+                        if(String(categoriesObj[k].id) === String(categories[j])) {
+                            categoriesObj[k].num += 1;
+                            exist = true;
+                            break;
+                        }
+                    }
+
+                    if(!exist) {
+                        categoriesObj.push({
+                            id: String(categories[j]),
+                            num: 1 
+                        })
+                    }
+                }
+            }
+
+            let favouriteCategoryId = 0;
+            let favouriteCategoryNum = 0;
+
+            for(var i = 0; categoriesObj[i]; i++) {
+                if(categoriesObj[i].num > favouriteCategoryNum) {
+                    favouriteCategoryId = Number(categoriesObj[i].id);
+                    favouriteCategoryNum = categoriesObj[i].num;
+                }
+            }
+
+            return favouriteCategoryId;
+        }
     }
 
 

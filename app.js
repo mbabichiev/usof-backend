@@ -1,5 +1,7 @@
 const express = require("express");
+const cors = require('cors');
 const bp = require('body-parser');
+const fileUpload = require('express-fileupload');
 
 const userRouter = require("./routes/userRouter.js");
 const authRouter = require("./routes/authRouter.js");
@@ -8,10 +10,14 @@ const categoryRouter = require("./routes/categoryRouter.js");
 const commentRouter = require("./routes/commentRouter.js");
 
 const app = express();
-const port = 3000;
+const port = 8080;
 const host = "127.0.0.1";
 
+app.use(cors({
+    origin: ['http://localhost:3000']
+}));
 
+app.use(fileUpload())
 app.use(bp.json());
 app.use(bp.urlencoded({ extended: true }));
 
@@ -26,6 +32,6 @@ app.use(function (req, res, next) {
 });
  
 app.listen(port, host, function() {
-    console.log(`App started on PORT ${port}\nhttp://${host}:${port}`);
+    console.log(`Server started on PORT ${port}\nhttp://${host}:${port}`);
 });
 

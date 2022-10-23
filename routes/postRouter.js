@@ -6,6 +6,7 @@ const postRouter = express.Router();
 postRouter.get("/:id/comments", commentController.getAllCommentsByPostId)
 postRouter.get("/:id/categories", postController.getCategoriesByPostId)
 postRouter.get("/:id/like", postController.getLikesByPostId)
+postRouter.post("/:id/checklike", postController.checkForLikeByPostId)
 postRouter.post("/:id/like", postController.createLikeUnderPost)
 postRouter.delete("/:id/like", postController.deleteLikeUnderPost)
 postRouter.post("/:id/comments", commentController.createCommentWithPostId)

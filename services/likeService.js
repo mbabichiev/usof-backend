@@ -29,7 +29,7 @@ class LikeService {
 
 
     async checkIfLikeExistUnderPost(author_id, post_id) {
-        let statement = `SELECT id FROM likes WHERE author_id=${author_id} AND entity_id=${post_id};`
+        let statement = `SELECT id FROM likes WHERE entity="post" AND author_id=${author_id} AND entity_id=${post_id};`
 
         let [rows, fields]  = await this.likeRepository.createStatement(statement);
         
@@ -41,9 +41,37 @@ class LikeService {
     }
 
 
+    async getLikeIfExistByPostId(author_id, post_id) {
+
+        let statement = `SELECT * FROM likes WHERE entity="post" AND author_id=${author_id} AND entity_id=${post_id};`
+
+        let [rows, fields]  = await this.likeRepository.createStatement(statement);
+        
+        if(String(rows) == '') {
+            return null;
+        }
+
+        return rows[0];
+    }
+
+
+    async getLikeIfExistByCommentId(author_id, comment_id) {
+
+        let statement = `SELECT * FROM likes WHERE entity="comment" AND author_id=${author_id} AND entity_id=${comment_id};`
+
+        let [rows, fields]  = await this.likeRepository.createStatement(statement);
+        
+        if(String(rows) == '') {
+            return null;
+        }
+
+        return rows[0];
+    }
+
+
     async checkIfLikeExistUnderComment(author_id, comment_id) {
 
-        let statement = `SELECT id FROM likes WHERE author_id=${author_id} AND entity_id=${comment_id};`
+        let statement = `SELECT id FROM likes WHERE entity="comment" AND author_id=${author_id} AND entity_id=${comment_id};`
 
         let [rows, fields]  = await this.likeRepository.createStatement(statement);
         
@@ -122,11 +150,18 @@ class LikeService {
         else {
 
             if(like.getEntity() == "post") {
+
+                let post = await this.postService.getPostById(like.getEntityId());
+
+                if(!post) {
+                    return -7;
+                }
+
                 if(like.getType() === "like") {
-                    await this.changeUserRating(like.getAuthorId(), 1);
+                    await this.changeUserRating(post.author_id, 1);
                 }
                 else {
-                    await this.changeUserRating(like.getAuthorId(), -1);
+                    await this.changeUserRating(post.author_id, -1);
                 }
             }
 
@@ -171,7 +206,13 @@ class LikeService {
 
         let [rows, fields] = await this.likeRepository.createStatement(statement);
 
-        return rows[0].id;
+        if(rows[0]) {
+            return rows[0].id;
+        }
+        else {
+            return -3
+        }
+        
     }
 
 
@@ -190,6 +231,74 @@ class LikeService {
         let [rows, fields] = await this.likeRepository.createStatement(statement);
 
         return rows;
+    }
+
+
+    async getNumOfLikesByPostId(post_id) {
+
+        console.log("Get num of likes under post id: " + post_id);
+
+        if(await this.postService.checkIfPostExistById(post_id) === false) {
+            console.log("Post not found")
+            return -1;
+        }
+
+        let statement = `SELECT count(*) AS total FROM likes WHERE type="like" AND entity="post" AND entity_id=${post_id};`
+
+        let [rows, fields] = await this.likeRepository.createStatement(statement);
+
+        return rows[0];
+    }
+
+
+    async getNumOfLikesByCommentId(comment_id) {
+
+        console.log("Get num of likes under comment id: " + comment_id);
+
+        if(await this.commentService.checkIfCommentExistById(comment_id) === false) {
+            console.log("Comment not found")
+            return -1;
+        }
+
+        let statement = `SELECT count(*) AS total FROM likes WHERE type="like" AND entity="comment" AND entity_id=${comment_id};`
+
+        let [rows, fields] = await this.likeRepository.createStatement(statement);
+
+        return rows[0];
+    }
+
+
+    async getNumOfDislikesByPostId(post_id) {
+
+        console.log("Get num of dislikes under post id: " + post_id);
+
+        if(await this.postService.checkIfPostExistById(post_id) === false) {
+            console.log("Post not found")
+            return -1;
+        }
+
+        let statement = `SELECT count(*) AS total FROM likes WHERE type="dislike" AND entity="post" AND entity_id=${post_id};`
+
+        let [rows, fields] = await this.likeRepository.createStatement(statement);
+
+        return rows[0];
+    }
+
+
+    async getNumOfDislikesByCommentId(comment_id) {
+
+        console.log("Get num of dislikes under comment id: " + comment_id);
+
+        if(await this.commentService.checkIfCommentExistById(comment_id) === false) {
+            console.log("Comment not found")
+            return -1;
+        }
+
+        let statement = `SELECT count(*) AS total FROM likes WHERE type="dislike" AND entity="comment" AND entity_id=${comment_id};`
+
+        let [rows, fields] = await this.likeRepository.createStatement(statement);
+
+        return rows[0];
     }
 
 
@@ -254,6 +363,8 @@ class LikeService {
             return -1;
         }
 
+        let like = await this.getLikeById(id);
+
         let statement = `DELETE FROM likes WHERE id=${id};`
 
         if(await this.likeRepository.createStatement(statement) == -1) {
@@ -262,14 +373,12 @@ class LikeService {
         }
         else {
 
-            let like = this.getLikeById(id);
-
             if(like.entity === "post") {
                 if(like.type === "like") {
-                    await this.changeUserRating(like.author_id, 1);
+                    await this.changeUserRating(like.author_id, -1);
                 }
                 else {
-                    await this.changeUserRating(like.author_id, -1);
+                    await this.changeUserRating(like.author_id, 1);
                 }
             }
 

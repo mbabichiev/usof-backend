@@ -1,12 +1,16 @@
 const CategoryService = require("../services/categoryService.js")
 const PostService = require("../services/postService.js")
 const UserService = require("../services/userService.js")
-const Category = require("../models/category.js")
+const Category = require("../models/category.js");
+const LikeService = require("../services/likeService.js");
+const PostMapper = require("../utils/PostMapper")
 
 let categoryService = new CategoryService();
 let postService = new PostService();
 let userService = new UserService();
+let likeService = new LikeService();
 
+let postMapper = new PostMapper();
 
 exports.getAllCategories = async function (request, response){ 
 
@@ -64,27 +68,13 @@ exports.getAllPostsByCategoryId = async function (request, response) {
         let categories = String(data[i].categories).split(",");
 
         if(categories.indexOf(id) != -1) {
-
-            let user = await userService.getUserById(data[i].author_id);
-
-            posts.push({
-                id: data[i].id,
-                author_id: data[i].author_id,
-                author: user.full_name,
-                title: data[i].title,
-                status: data[i].status,
-                publish_date: new Date(data[i].publish_date).toLocaleString(),
-                categories: data[i].categories,
-                content: data[i].content
-            })
+            posts.push(await postMapper.getPostJSON(data[i]))
         }
     }
 
     response.status(200).send({
         posts: posts
     })
-
-
 }
 
 

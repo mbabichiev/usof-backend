@@ -1,7 +1,17 @@
 const UserService = require("../services/userService.js")
 const User = require("../models/user.js");
+const fs = require("fs");
+const PostService = require("../services/postService.js");
+const LikeService = require("../services/likeService.js");
+const CategoryService = require("../services/categoryService.js");
+
+const PostMapper = require("../utils/PostMapper")
 
 let userService = new UserService();
+let postService = new PostService();
+let likeService = new LikeService();
+let categoryService = new CategoryService();
+let postMapper = new PostMapper();
 
 
 exports.createUser = async function (request, response) {
@@ -55,8 +65,31 @@ exports.getUserById = async function(request, response) {
     let data = await userService.getUserById(id);
 
     if(data) {
+
+        let numOfPublications = await postService.getAmountPostsByUserId(data.id);
+
+        if(numOfPublications === -1) {
+            numOfPublications = 0;
+        }
+
+        let favouriteCategory = null;
+
+        if(numOfPublications !== 0) {
+            favouriteCategory = await postService.getFavouriveCategoryByUserId(data.id);
+        }
+
         response.status(200).send({
-            user: data
+
+            user: {
+                id: data.id,
+                login: data.login,
+                full_name: data.full_name,
+                email: data.email,
+                rating: data.rating,
+                number_of_publications: numOfPublications.total,
+                favourite_category: favouriteCategory,
+                role: data.role,
+            }
         })
     }
     else {
@@ -66,8 +99,156 @@ exports.getUserById = async function(request, response) {
 };
 
 
+exports.getUserAvatarById = function(request, response) {
+
+    let id = request.params.id;
+
+    if(!id) {
+        return response.status(400).send("Id is null");
+    }
+
+    let dir = 'avatars'
+    let path = `${dir}/no_avatar.png`;
+
+    if(fs.existsSync(`${dir}/${id}.jpg`)) {
+        path = `${dir}/${id}.jpg`;
+    }
+    else if(fs.existsSync(`${dir}/${id}.png`)) {
+        path = `${dir}/${id}.png`;
+    }
+    else if(fs.existsSync(`${dir}/${id}.jpeg`)) {
+        path = `${dir}/${id}.jpeg`;
+    }
+
+    fs.readFile(path, function(err, data) {
+
+        if(!err) {
+            response.status(200).end(data)
+        }
+        else {
+            console.log(err);
+        }
+
+    })
+}
+
+
+async function getCategoriesJSON(categoriesId, post_id) {
+
+    let categoriesJSON = [];
+    let categoriesFilter = [];
+
+    let categories = String(categoriesId).split(',');
+    let checkNeedToDelete = false;
+
+    for(var i = 0; i < categories.length; i++) {
+
+        var category = await categoryService.getCategoryById(categories[i]);
+
+        if(category != -1) {
+            categoriesJSON.push({
+                id: category.id,
+                title: category.title,
+                description: category.description
+            })
+
+            categoriesFilter.push(categories[i])
+        }
+        else {
+            checkNeedToDelete = true;
+        }
+    }
+
+    if(checkNeedToDelete === true) {
+
+        await postService.updatePostById(post_id, 
+            new Post(
+                null, 
+                null,
+                null,
+                null,
+                null,
+                categoriesFilter.join(',')
+        ))
+    }
+
+    return categoriesJSON;
+}
+
+
+
+exports.getAllPostsByUserId = async function (request, response) {
+
+    let id = request.params.id;
+
+    if(!id) {
+        return response.status(400).send("Id is null");
+    }
+
+    let data = await postService.getAllPostByUserId(id);
+    let posts = []
+
+    for(var i = 0; data[i]; i++) {
+        posts.push(await postMapper.getPostJSON(data[i]));
+    }
+
+    response.status(200).send({
+        posts: posts
+    })
+
+}
+
+
+function deleteFile(file) {
+    console.log("Delete file: " + file)
+
+    fs.unlink(file, err => {
+        if(err) throw err; 
+    });
+}
+
+
 exports.uploadAvatar = function (request, response) {
-    response.status(200).send()
+
+    if (!request.files || Object.keys(request.files).length === 0) {
+        return response.status(400).send('No files were uploaded');
+    }
+
+    let id = request.params.id;
+
+    if(!id) {
+        return response.status(400).send('Id is null');
+    }
+
+    let sampleFile = request.files.file;
+    let fileFormat = sampleFile.name.split('.').pop();
+
+    if(fileFormat != 'jpg' && fileFormat != 'png' && fileFormat != 'jpeg') {
+        return response.status(400).send("Avatar should be only .jpg, .png or .jpeg")
+    }
+
+    let dir = 'avatars'
+
+    if(fs.existsSync(`${dir}/${id}.jpg`)) {
+        deleteFile(`${dir}/${id}.jpg`);
+    }
+    else if(fs.existsSync(`${dir}/${id}.png`)) {
+        deleteFile(`${dir}/${id}.png`);
+    }
+    else if(fs.existsSync(`${dir}/${id}.jpeg`)) {
+        deleteFile(`${dir}/${id}.jpeg`);
+    }
+    
+    sampleFile.mv(`avatars/${id}.${fileFormat}`, function(err) {
+
+        if (err) {
+            console.log(err);
+            return response.status(500).send();
+        }
+    
+        response.status(200).send();
+    });
+
 }
 
 
@@ -146,6 +327,5 @@ exports.deleteUser = async function (request, response) {
     else {
         response.status(500).send();
     }
-
 }
 

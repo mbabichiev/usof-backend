@@ -7,13 +7,17 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
-    "type": "git"
+    "type": "git",
+    "url": "git@gitlab.ucode.world:connect-khpi/connect-fullstack-usof-backend/mbabichiev.git"
   },
   "author": "Maxim Babichiev",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.1.0",
     "body-parser": "^1.20.0",
+    "cors": "^2.8.5",
     "express": "^4.18.1",
+    "express-fileupload": "^1.4.0",
     "mysql2": "^2.3.3",
     "nodemailer": "^6.7.8",
     "uuid": "^9.0.0"

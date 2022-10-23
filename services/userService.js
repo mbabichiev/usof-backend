@@ -1,4 +1,5 @@
 const UserRepository = require("../repositories/userRepository.js")
+const bcrypt = require('bcrypt');
 
 class UserService {
 
@@ -81,10 +82,8 @@ class UserService {
 
         let [rows, fields] = await this.userRepository.createStatement(statement);
 
-        if(password != rows[0].password) {
-            return false;
-        }
-        return true;
+
+        return await bcrypt.compare(password, rows[0].password);
 
     }
 
@@ -108,9 +107,13 @@ class UserService {
             return -3;
         }
 
+
+        let hashPassword = await bcrypt.hash(user.getPassword(), 8);
+
+
         let statement = `
         INSERT INTO users (login, password, full_name, email, role) 
-        VALUES ("${user.getLogin()}", "${user.getPassword()}", "${user.getFullName()}", "${user.getEmail()}", "${user.getRole()}");`
+        VALUES ("${user.getLogin()}", "${hashPassword}", "${user.getFullName()}", "${user.getEmail()}", "${user.getRole()}");`
 
         if(await this.userRepository.createStatement(statement) == -1) {
             return -4;
@@ -203,16 +206,21 @@ class UserService {
             return -1;
         }
 
-        let statement = `DELETE FROM users WHERE id = ${id};`
+        let stateDeleteUser = `DELETE FROM users WHERE id = ${id};`
+        let stateDeleteUserPosts = `DELETE FROM posts WHERE author_id=${id};`
+        let stateDeleteUserComments = `DELETE FROM comments WHERE author_id=${id};`
+        let stateDeleteUserLikes = `DELETE FROM likes WHERE author_id=${id};`
 
-        if(await this.userRepository.createStatement(statement) == -1) {
-            console.log("Some error.");
-            return -2;
-        }
-        else {
-            return 0;
+        let statements = [stateDeleteUser, stateDeleteUserPosts, stateDeleteUserComments, stateDeleteUserLikes];
+
+        for(var i = 0; statements[i]; i++) {
+            if(await this.userRepository.createStatement(statements[i]) == -1) {
+                console.log("Some error.");
+                return -2;
+            }
         }
 
+        return 0;
     }
 
 }

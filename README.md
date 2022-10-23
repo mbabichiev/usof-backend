@@ -8,7 +8,6 @@ The example of post:
 Get users:
 ![photo_2022-09-26_21-39-47](https://user-images.githubusercontent.com/105050372/192384182-c20c205b-7382-4540-88b9-4883b0832f47.jpg)
 
-
 Create new category:
 ![photo_2022-09-26_21-39-52](https://user-images.githubusercontent.com/105050372/192384234-3304e4cb-c1f7-49b5-b94f-84b9fbc9328c.jpg)
 As you can see, we have "Status: 201 Created".

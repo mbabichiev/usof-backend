@@ -6,10 +6,13 @@ const CategoryService = require("../services/categoryService.js")
 const Post = require("../models/post.js");
 const Like = require("../models/like.js")
 
+const PostMapper = require("../utils/PostMapper")
+
 let postService = new PostService();
 let userService = new UserService();
 let likeService = new LikeService();
 let categoryService = new CategoryService();
+let postMapper = new PostMapper();
 
 
 exports.createPost = async function (request, response){ 
@@ -89,33 +92,34 @@ async function getCategoriesJSON(categoriesId, post_id) {
     return categoriesJSON;
 }
 
+
+async function getPostsWithLimitAndPage(limit, page) {
+    return await postService.getPostsByLimitAndPage(limit, page);
+}
+
+
 exports.getAllPosts = async function (request, response) {
 
-    let data = await postService.getAllPosts();
+    let data = [];
+
+    if(request.query.limit && request.query.page && request.query.limit > 0 && request.query.page > 0) {
+        data = await getPostsWithLimitAndPage(request.query.limit, request.query.page);
+    } 
+    else {
+        data = await postService.getAllPosts();
+    }
 
     let posts = []
 
     for(var i = 0; data[i]; i++) {
-
-        var user = await userService.getUserById(data[i].author_id)
-
-        posts.push({
-                id: data[i].id,
-                author_id: data[i].author_id,
-                author: user.full_name,
-                title: data[i].title,
-                status: data[i].status,
-                publish_date: new Date(data[i].publish_date).toLocaleString(),
-                categories: await getCategoriesJSON(data[i].categories, data[i].id),
-                content: data[i].content
-            });
-
+        posts.push(
+            await postMapper.getPostJSON(data[i])
+        );
     }
 
     response.status(200).send({
         posts: posts
     })
-
 }
 
 
@@ -129,29 +133,10 @@ exports.getPostById = async function (request, response) {
         response.status(400).send("Post not found");
     }
     else {
-
-        var user = await userService.getUserById(data.author_id)
-
-        if(user == null) {
-            response.status(400).send("User not found");
-        }
-        else {
-
-            response.status(200).send({
-                post: {
-                    id: data.id,
-                    author_id: data.author_id,
-                    author: user.full_name,
-                    title: data.title,
-                    status: data.status,
-                    publish_date: new Date(data.publish_date).toLocaleString(),
-                    categories: await getCategoriesJSON(data.categories, data.id),
-                    content: data.content
-                }
-            })
-        }
+        response.status(200).send({
+            post: await postMapper.getPostJSON(data)
+        })
     }
-
 }
 
 
@@ -254,6 +239,21 @@ exports.getLikesByPostId = async function (request, response) {
             likes: likes
         })
     }
+}
+
+
+exports.checkForLikeByPostId = async function (request, response) {
+
+    let post_id = request.params.id;
+
+    if(!request.body.author_id) {
+        return response.status(400).send("author_id is null");
+    }
+
+    let data = await likeService.getLikeIfExistByPostId(request.body.author_id, post_id);
+
+    response.status(200).send(data);
+
 }
 
 
