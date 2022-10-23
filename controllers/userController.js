@@ -2,15 +2,11 @@ const UserService = require("../services/userService.js")
 const User = require("../models/user.js");
 const fs = require("fs");
 const PostService = require("../services/postService.js");
-const LikeService = require("../services/likeService.js");
-const CategoryService = require("../services/categoryService.js");
 
 const PostMapper = require("../utils/PostMapper")
 
 let userService = new UserService();
 let postService = new PostService();
-let likeService = new LikeService();
-let categoryService = new CategoryService();
 let postMapper = new PostMapper();
 
 
@@ -62,6 +58,10 @@ exports.getUserById = async function(request, response) {
 
     let id = request.params.id;
 
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
+
     let data = await userService.getUserById(id);
 
     if(data) {
@@ -103,8 +103,8 @@ exports.getUserAvatarById = function(request, response) {
 
     let id = request.params.id;
 
-    if(!id) {
-        return response.status(400).send("Id is null");
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
     }
 
     let dir = 'avatars'
@@ -133,56 +133,12 @@ exports.getUserAvatarById = function(request, response) {
 }
 
 
-async function getCategoriesJSON(categoriesId, post_id) {
-
-    let categoriesJSON = [];
-    let categoriesFilter = [];
-
-    let categories = String(categoriesId).split(',');
-    let checkNeedToDelete = false;
-
-    for(var i = 0; i < categories.length; i++) {
-
-        var category = await categoryService.getCategoryById(categories[i]);
-
-        if(category != -1) {
-            categoriesJSON.push({
-                id: category.id,
-                title: category.title,
-                description: category.description
-            })
-
-            categoriesFilter.push(categories[i])
-        }
-        else {
-            checkNeedToDelete = true;
-        }
-    }
-
-    if(checkNeedToDelete === true) {
-
-        await postService.updatePostById(post_id, 
-            new Post(
-                null, 
-                null,
-                null,
-                null,
-                null,
-                categoriesFilter.join(',')
-        ))
-    }
-
-    return categoriesJSON;
-}
-
-
-
 exports.getAllPostsByUserId = async function (request, response) {
 
     let id = request.params.id;
 
-    if(!id) {
-        return response.status(400).send("Id is null");
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
     }
 
     let data = await postService.getAllPostByUserId(id);
@@ -216,8 +172,8 @@ exports.uploadAvatar = function (request, response) {
 
     let id = request.params.id;
 
-    if(!id) {
-        return response.status(400).send('Id is null');
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
     }
 
     let sampleFile = request.files.file;
@@ -255,13 +211,17 @@ exports.uploadAvatar = function (request, response) {
 exports.updateUser = async function (request, response) {
 
     let id = request.params.id;
+
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
+
     let oldUser = await userService.getUserById(id);
 
     if(!oldUser) {
         response.status(400).send(`User is not found`)
         return;
     }
-
 
     if(request.body.login != oldUser.login) {
 
@@ -315,6 +275,10 @@ exports.updateUser = async function (request, response) {
 
 exports.deleteUser = async function (request, response) {
     let id = request.params.id;
+
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     let status = await userService.deleteUserById(id);
 

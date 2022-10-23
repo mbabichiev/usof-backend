@@ -1,9 +1,9 @@
-const Comment = require("../models/comment.js")
-const Like = require("../models/like.js")
+const Comment = require("../models/comment.js");
+const Like = require("../models/like.js");
 
-const CommentService = require("../services/commentService.js")
-const UserService = require("../services/userService.js")
-const LikeService = require("../services/likeService.js")
+const CommentService = require("../services/commentService.js");
+const UserService = require("../services/userService.js");
+const LikeService = require("../services/likeService.js");
 
 let commentService = new CommentService();
 let userService = new UserService();
@@ -13,6 +13,10 @@ let likeService = new LikeService();
 exports.createCommentWithPostId = async function(request, response) { 
 
     let post_id = request.params.id;
+
+    if(!post_id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     let status = await commentService.createComment(new Comment(
         request.body.author_id,
@@ -42,6 +46,10 @@ exports.createCommentWithPostId = async function(request, response) {
 exports.createLikeByCommentId = async function(request, response) { 
     
     let id = request.params.id;
+
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     let status = await likeService.createLike(
         new Like(
@@ -78,6 +86,10 @@ exports.checkForLikeByCommentId = async function(request, response) {
 
     let comment_id = request.params.id;
 
+    if(!comment_id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
+
     if(!request.body.author_id) {
         return response.status(400).send("author_id is null");
     }
@@ -92,6 +104,10 @@ exports.checkForLikeByCommentId = async function(request, response) {
 exports.getAllCommentsByPostId = async function(request, response) {
 
     let id = request.params.id;
+
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     let data = await commentService.getAllCommentsByPostId(id);
 
@@ -131,6 +147,10 @@ exports.getCommentById = async function(request, response) {
 
     let id = request.params.id;
 
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
+
     let comment = await commentService.getCommentById(id);
 
     if(comment == -1) {
@@ -155,6 +175,10 @@ exports.getCommentById = async function(request, response) {
 exports.getAllLikesByCommentId = async function(request, response) {
 
     let comment_id = request.params.id;
+
+    if(!comment_id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     let data = await likeService.getAllLikesByCommentId(comment_id);
 
@@ -182,6 +206,10 @@ exports.updateCommentById = async function(request, response) {
 
     let id = request.params.id;
 
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
+
     let status = await commentService.updateCommentById(id, new Comment(
         null,
         null,
@@ -206,6 +234,10 @@ exports.deleteCommentById = async function(request, response) {
 
     let id = request.params.id;
 
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
+
     let status = await commentService.deleteCommentById(id);
 
     if(status == 0) {
@@ -224,6 +256,10 @@ exports.deleteCommentById = async function(request, response) {
 exports.deleteLikeByCommentId = async function(request, response) {
 
     let id = request.params.id;
+
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     let status = await likeService.deleteLikeByAuthorIdAndCommentId(
         request.body.author_id,

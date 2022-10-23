@@ -1,14 +1,10 @@
-const CategoryService = require("../services/categoryService.js")
-const PostService = require("../services/postService.js")
-const UserService = require("../services/userService.js")
+const CategoryService = require("../services/categoryService.js");
+const PostService = require("../services/postService.js");
 const Category = require("../models/category.js");
-const LikeService = require("../services/likeService.js");
-const PostMapper = require("../utils/PostMapper")
+const PostMapper = require("../utils/PostMapper");
 
 let categoryService = new CategoryService();
 let postService = new PostService();
-let userService = new UserService();
-let likeService = new LikeService();
 
 let postMapper = new PostMapper();
 
@@ -37,6 +33,10 @@ exports.getCategoryById = async function (request, response) {
 
     let id = request.params.id;
 
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
+
     let category = await categoryService.getCategoryById(id);
 
     if(category == -1) {
@@ -58,6 +58,11 @@ exports.getCategoryById = async function (request, response) {
 exports.getAllPostsByCategoryId = async function (request, response) {
 
     let id = String(request.params.id);
+
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
+
     let data = await postService.getAllPosts(); //get all posts
 
     let posts = []
@@ -107,6 +112,10 @@ exports.updateCategoryById = async function (request, response) {
 
     let id = request.params.id;
 
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
+
     let status = await categoryService.updateCategoryById(id, new Category(
         request.body.title,
         request.body.description
@@ -129,6 +138,10 @@ exports.updateCategoryById = async function (request, response) {
 exports.deleteCategoryById = async function (request, response) {
 
     let id = request.params.id;
+
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     let status = await categoryService.deleteCategoryById(id);
 

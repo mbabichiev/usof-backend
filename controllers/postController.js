@@ -1,17 +1,15 @@
-const PostService = require("../services/postService.js")
-const UserService = require("../services/userService.js")
-const LikeService = require("../services/likeService.js")
-const CategoryService = require("../services/categoryService.js")
+const PostService = require("../services/postService.js");
+const UserService = require("../services/userService.js");
+const LikeService = require("../services/likeService.js");
 
 const Post = require("../models/post.js");
-const Like = require("../models/like.js")
+const Like = require("../models/like.js");
 
-const PostMapper = require("../utils/PostMapper")
+const PostMapper = require("../utils/PostMapper");
 
 let postService = new PostService();
 let userService = new UserService();
 let likeService = new LikeService();
-let categoryService = new CategoryService();
 let postMapper = new PostMapper();
 
 
@@ -49,48 +47,6 @@ exports.createPost = async function (request, response){
         response.status(500).send();
     }
 }
- 
-async function getCategoriesJSON(categoriesId, post_id) {
-
-    let categoriesJSON = [];
-    let categoriesFilter = [];
-
-    let categories = String(categoriesId).split(',');
-    let checkNeedToDelete = false;
-
-    for(var i = 0; i < categories.length; i++) {
-
-        var category = await categoryService.getCategoryById(categories[i]);
-
-        if(category != -1) {
-            categoriesJSON.push({
-                id: category.id,
-                title: category.title,
-                description: category.description
-            })
-
-            categoriesFilter.push(categories[i])
-        }
-        else {
-            checkNeedToDelete = true;
-        }
-    }
-
-    if(checkNeedToDelete === true) {
-
-        await postService.updatePostById(post_id, 
-            new Post(
-                null, 
-                null,
-                null,
-                null,
-                null,
-                categoriesFilter.join(',')
-        ))
-    }
-
-    return categoriesJSON;
-}
 
 
 async function getPostsWithLimitAndPage(limit, page) {
@@ -127,6 +83,10 @@ exports.getPostById = async function (request, response) {
 
     let id = request.params.id;
 
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
+
     let data = await postService.getPostById(id)
 
     if(data == -1) {
@@ -143,6 +103,9 @@ exports.getPostById = async function (request, response) {
 exports.updatePostById = async function (request, response) {
 
     let id = request.params.id;
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     let post = new Post(
         null,
@@ -174,6 +137,9 @@ exports.updatePostById = async function (request, response) {
 exports.deletePostById = async function (request, response) {
 
     let id = request.params.id;
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     let status = await postService.deletePostById(id);
 
@@ -193,6 +159,9 @@ exports.deletePostById = async function (request, response) {
 exports.getCategoriesByPostId = async function (request, response) {
 
     let id = request.params.id;
+    if(!id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     let data = await postService.getPostById(id)
 
@@ -205,7 +174,7 @@ exports.getCategoriesByPostId = async function (request, response) {
         response.status(200).send({
             post: {
                 title: data.title,
-                categories: await getCategoriesJSON(categories)
+                categories: await postMapper.getCategoriesJSON(categories)
             }
         })
     }
@@ -215,6 +184,9 @@ exports.getCategoriesByPostId = async function (request, response) {
 exports.getLikesByPostId = async function (request, response) { 
     
     let post_id = request.params.id;
+    if(!post_id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     let data = await likeService.getAllLikesByPostId(post_id);
 
@@ -245,6 +217,9 @@ exports.getLikesByPostId = async function (request, response) {
 exports.checkForLikeByPostId = async function (request, response) {
 
     let post_id = request.params.id;
+    if(!post_id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     if(!request.body.author_id) {
         return response.status(400).send("author_id is null");
@@ -260,6 +235,9 @@ exports.checkForLikeByPostId = async function (request, response) {
 exports.createLikeUnderPost = async function (request, response) { 
 
     let post_id = request.params.id;
+    if(!post_id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     let like = new Like(
         request.body.author_id,
@@ -294,7 +272,16 @@ exports.createLikeUnderPost = async function (request, response) {
 exports.deleteLikeUnderPost = async function (request, response) { 
 
     let post_id = request.params.id;
+
+    if(!post_id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
+
     let author_id = request.body.author_id;
+
+    if(!author_id.match(/^\d+$/)) {
+        return response.status(400).send();
+    }
 
     let status = await likeService.deleteLikeById(await likeService.getLikeIdByAuthorIdAndPostId(author_id, post_id));
 
