@@ -10,9 +10,7 @@ class PhotoUploader {
     }
 
 
-
-    // path of default avatar if file not exists
-    // path of user avatar if file exists
+    // return path if file exists else return ''
     #getFilePathIfExist(dir, fileNameWithoutFormat) {
         for(var i = 0; i < this.allowedFormats.length; i++) {
 
@@ -22,9 +20,23 @@ class PhotoUploader {
                 return path;
             }
             else if(i === this.allowedFormats.length - 1) {
-                return this.no_avatar; 
+                return ''; 
             }
         }
+    }
+
+
+
+    // path of default avatar if file not exists
+    // path of user avatar if file exists
+    #getAvatarPathIfExist(dir, fileNameWithoutFormat) {
+        let path = this.#getFilePathIfExist(dir, fileNameWithoutFormat);
+
+        if(path === '') {
+            path = this.no_avatar;
+        }
+
+        return path;
     }
 
 
@@ -80,6 +92,10 @@ class PhotoUploader {
     // return -2 if it's fs error (server error)
     #savePhoto(dir, name, file) {
 
+        if(!file) {
+            return -3;
+        }
+
         let fileFormat = file.name.split('.').pop();
 
         if(!this.#checkForValidatedFileFormat(fileFormat)) {
@@ -87,6 +103,10 @@ class PhotoUploader {
         }
 
         this.#deleteFileIfExist(dir, name);
+
+        if (!fs.existsSync(dir)){
+            fs.mkdirSync(dir);
+        }
         
         file.mv(`${dir}/${name}.${fileFormat}`, function(err) {
 
@@ -119,9 +139,15 @@ class PhotoUploader {
 
 
 
-    // return path anyway
+    // return path of photo (if exists) or path of default avatar
     getUserAvatarPathById(id) {
-        return this.#getFilePathIfExist(this.avatars_dir, id);
+        return this.#getAvatarPathIfExist(this.avatars_dir, id);
+    }
+
+
+    // return path of photo (if exists) or ''
+    getPostPhotoPathById(id) {
+        return this.#getFilePathIfExist(this.posts_photo_dir, id);
     }
 
 
@@ -129,6 +155,13 @@ class PhotoUploader {
     // nothing to return
     deleteAvatarById(id) {
         this.#deleteFileIfExist(this.avatars_dir, id);
+    }
+
+
+
+    // nothing to return
+    deletePostPhotoById(id) {
+        this.#deleteFileIfExist(this.posts_photo_dir, id);
     }
 }
 
