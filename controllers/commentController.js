@@ -4,14 +4,15 @@ const Like = require("../models/like.js");
 const CommentService = require("../services/commentService.js");
 const UserService = require("../services/userService.js");
 const LikeService = require("../services/likeService.js");
+const PostService = require("../services/postService");
 
 let commentService = new CommentService();
 let userService = new UserService();
 let likeService = new LikeService();
+let postService = new PostService();
 
 
 exports.createCommentWithPostId = async function(request, response) { 
-
     let post_id = request.params.id;
 
     if(!post_id.match(/^\d+$/)) {
@@ -44,7 +45,6 @@ exports.createCommentWithPostId = async function(request, response) {
 
 
 exports.createLikeByCommentId = async function(request, response) { 
-    
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {
@@ -59,7 +59,6 @@ exports.createLikeByCommentId = async function(request, response) {
             request.body.type
         )
     )
-
 
     if(status == 0) {
         response.status(201).send();
@@ -83,7 +82,6 @@ exports.createLikeByCommentId = async function(request, response) {
 
 
 exports.checkForLikeByCommentId = async function(request, response) {
-
     let comment_id = request.params.id;
 
     if(!comment_id.match(/^\d+$/)) {
@@ -100,38 +98,50 @@ exports.checkForLikeByCommentId = async function(request, response) {
 }
 
 
+async function getCommentsWithLimit(limit, page, sort, post_id) {
+    if(sort === "new") {
+        return await commentService.getCommentsUnderPostByLimitAndPageSortNew(limit, page, post_id);
+    }
+    else if(sort === "old") {
+        return await commentService.getCommentsUnderPostByLimitAndPageSortOld(limit, page, post_id);
+    }
+    else if(sort === "popular") {
+        return await commentService.getCommentsUnderPostByLimitAndPageSortPopular(limit, page, post_id);
+    }
+    return [];
+}
+
 
 exports.getAllCommentsByPostId = async function(request, response) {
-
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {
         return response.status(400).send();
     }
 
-    let data = await commentService.getAllCommentsByPostId(id);
-
-    if(data == -1) {
+    if(await postService.checkIfPostExistById(id) === false) {
         response.status(400).send("Post not found");
         return;
     }
- 
-    let comments = [];
 
+    let data = [];
+    if(request.query.limit && request.query.sort && request.query.page && request.query.limit > 0 && request.query.page > 0
+        && (request.query.sort === "popular" || request.query.sort === "old" || request.query.sort === "new")) {
+
+        data = await getCommentsWithLimit(request.query.limit, request.query.page, request.query.sort, id);
+    }
+
+    let comments = [];
     for(var i = 0; data[i]; i++) {
 
         var user = await userService.getUserById(data[i].author_id)
-
-        var likes = await likeService.getNumOfLikesByCommentId(data[i].id)
-        var dislikes = await likeService.getNumOfDislikesByCommentId(data[i].id)
-
         comments.push({
                 id: data[i].id,
                 author_id: data[i].author_id,
                 author: user.full_name,
                 publish_date: data[i].publish_date,
-                likes: likes.total,
-                dislikes: dislikes.total,
+                likes: data[i].likes,
+                dislikes: data[i].dislikes,
                 content: data[i].content
             });
     }
@@ -139,12 +149,10 @@ exports.getAllCommentsByPostId = async function(request, response) {
     response.status(200).send({
         comments: comments
     })
-
 }
 
 
 exports.getCommentById = async function(request, response) {
-
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {
@@ -173,7 +181,6 @@ exports.getCommentById = async function(request, response) {
 
 
 exports.getAllLikesByCommentId = async function(request, response) {
-
     let comment_id = request.params.id;
 
     if(!comment_id.match(/^\d+$/)) {
@@ -181,7 +188,6 @@ exports.getAllLikesByCommentId = async function(request, response) {
     }
 
     let data = await likeService.getAllLikesByCommentId(comment_id);
-
     let likes = []
 
     for(var i = 0; data[i]; i++) {
@@ -203,7 +209,6 @@ exports.getAllLikesByCommentId = async function(request, response) {
 
 
 exports.updateCommentById = async function(request, response) { 
-
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {
@@ -216,7 +221,6 @@ exports.updateCommentById = async function(request, response) {
         null,
         request.body.content
     ));
-
 
     if(status == 0) {
         response.status(202).send();
@@ -231,7 +235,6 @@ exports.updateCommentById = async function(request, response) {
 
 
 exports.deleteCommentById = async function(request, response) {
-
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {
@@ -249,12 +252,10 @@ exports.deleteCommentById = async function(request, response) {
     else {
         response.status(500).send();
     }
-
 }
 
 
 exports.deleteLikeByCommentId = async function(request, response) {
-
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {
@@ -281,5 +282,4 @@ exports.deleteLikeByCommentId = async function(request, response) {
     else {
         response.status(500).send();
     }
-
  }

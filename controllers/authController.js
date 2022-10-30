@@ -10,7 +10,6 @@ let tokenService = new TokenService();
 
 
 exports.create = async function (request, response){
-
     let status = await userService.createUser(new User(
         request.body.login,
         request.body.password,
@@ -22,8 +21,7 @@ exports.create = async function (request, response){
         ));
 
     if(status == 0) {
-        let is = await userService.getUserIdByLogin(request.body.login);
-        response.status(201).send("id=" + is)
+        response.status(201).send("id=" + await userService.getUserIdByLogin(request.body.login))
     }
     else if(status == -1) {
         response.status(400).send("User has null data")
@@ -41,7 +39,6 @@ exports.create = async function (request, response){
 
 
 exports.checkLoginAndPassword = async function (request, response) {
-
     let login = request.body.login;
     let password = request.body.password;
 
@@ -52,8 +49,7 @@ exports.checkLoginAndPassword = async function (request, response) {
         response.status(400).send("Wrong password")
     }
     else {
-        let id = await userService.getUserIdByLogin(request.body.login);
-        response.status(200).send("id=" + id)
+        response.status(200).send("id=" + await userService.getUserIdByLogin(request.body.login))
     }
 }
 
@@ -64,9 +60,7 @@ exports.logout = function (request, response){
 
 
 async function sendEmail(fromEmail, toEmail, title, text, html) {
-
     let testAccount = await nodemailer.createTestAccount();
-
     let transporter = nodemailer.createTransport({
         host: "smtp.ethereal.email",
         port: 587,
@@ -94,19 +88,15 @@ async function sendEmail(fromEmail, toEmail, title, text, html) {
 
 
 exports.resetPasswordAndSendToEmail = async function (request, response){
-
     let email = request.body.email;
 
     if(!email) {
-        response.status(400).send("Email is null")
-        return;
+        return response.status(400).send("Email is null")
     }
 
     let id = await userService.getUserIdByEmail(email);
-
     if(!id) {
-        response.status(400).send(`Email ${email} is not in use`)
-        return;
+        return response.status(400).send(`Email ${email} is not in use`)
     }
 
     let token = uuidv4();
@@ -118,54 +108,41 @@ exports.resetPasswordAndSendToEmail = async function (request, response){
     }
     
     let text = "Hello. Your password reset token: " + token;
-
     await sendEmail('"Lib To Lib" <lib.to.lib@gmail.com>', email, "Reset password", text, "<p>" + text + "</p>");
-
     response.status(200).send()
 
 };
 
 
 exports.passwordResetWithToken = async function (request, response){
-
     let token = request.params.token;
     let password = request.body.password;
 
     if(!token) {
-        response.status(400).send("Token is null");
-        return;
+        return response.status(400).send("Token is null");
     } 
 
     if(!password) {
-        response.status(400).send("Password is null");
-        return;
+        return response.status(400).send("Password is null");
     } 
 
     let id = await tokenService.getIdByToken(token);
-
     if(!id) {
-        response.status(400).send("Token not found");
-        return;
+        return response.status(400).send("Token not found");
     }
 
     let status = await userService.updateUserById(id, 
         new User(null, password, null, null, null, null, null));
 
-
     if(status == 0) {
         await tokenService.deleteTokenById(id);
-        response.status(202).send("id=" + id);
-        return;
+        return response.status(202).send("id=" + id);
     }
     
-
     if(status == -1) {
-        response.status(400).send("User not found");
-        return;
+        return response.status(400).send("User not found");
     }
 
-
     response.status(500).send();
-
 };
 

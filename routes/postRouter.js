@@ -3,6 +3,7 @@ const postController = require("../controllers/postController.js");
 const commentController = require("../controllers/commentController.js");
 const postRouter = express.Router();
 
+postRouter.get("/search/:data", postController.getPostsBySearch);
 postRouter.get("/:id/comments", commentController.getAllCommentsByPostId)
 postRouter.get("/:id/categories", postController.getCategoriesByPostId)
 postRouter.get("/:id/like", postController.getLikesByPostId)

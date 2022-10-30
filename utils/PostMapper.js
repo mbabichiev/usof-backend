@@ -16,7 +16,6 @@ class PostMapper {
 
 
     async getCategoriesJSON(categoriesId, post_id) {
-
         let categoriesJSON = [];
         let categoriesFilter = [];
 
@@ -24,7 +23,6 @@ class PostMapper {
         let checkNeedToDelete = false;
 
         for(var i = 0; i < categories.length; i++) {
-
             var category = await this.categoryService.getCategoryById(categories[i]);
 
             if(category != -1) {
@@ -42,7 +40,6 @@ class PostMapper {
         }
 
         if(checkNeedToDelete === true) {
-
             await this.postService.updatePostById(post_id, 
                 new Post(
                     null, 
@@ -59,19 +56,15 @@ class PostMapper {
 
 
     async getPostJSON (post) {
-
         var user = await this.userService.getUserById(post.author_id)
-        var likes = await this.likeService.getNumOfLikesByPostId(post.id)
-        var dislikes = await this.likeService.getNumOfDislikesByPostId(post.id)
-
         return {
             id: post.id,
             author_id: post.author_id,
             author: user.full_name,
             title: post.title,
             status: post.status,
-            likes: likes.total,
-            dislikes: dislikes.total,
+            likes: post.likes,
+            dislikes: post.dislikes,
             publish_date: post.publish_date,
             categories: await this.getCategoriesJSON(post.categories, post.id),
             content: post.content

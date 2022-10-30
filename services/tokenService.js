@@ -9,19 +9,16 @@ class TokenService {
 
     async checkIfTokenExistById(id) {
         let statement = `SELECT token FROM tokens WHERE id=${id};`
-
         let [rows, fields]  = await this.tokenRepository.createStatement(statement);
         
         if(String(rows) == '') {
             return false;
         }
-
         return true;
     }
 
 
     async insertTokenInDB(id, token) {
-
         console.log("Create token with id: " + id);
 
         let statement = `INSERT INTO tokens (id, token) VALUES (${id}, "${token}");`
@@ -30,53 +27,39 @@ class TokenService {
             console.log("User with id " + id + " is already have a token.");
             return -1;
         }
-        else {
-            return 0;
-        }
-        
+        return 0;  
     }
 
     
     async getTokenById(id) {
-
         console.log("Get token with id: " + id);
 
         let statement = `SELECT * FROM tokens WHERE id=${id};`
-
         let [rows, fields] = await this.tokenRepository.createStatement(statement);
 
         if(String(rows[0]) == '') {
             console.log("Token for user with id " + id + " not found")
             return null;
         }
-        else {
-            return rows[0];
-        }
-
+        return rows[0];
     }
 
 
     async getIdByToken(token) {
-
         console.log("Get id with token: " + token);
 
         let statement = `SELECT id FROM tokens WHERE token="${token}";`
-
         let [rows, fields] = await this.tokenRepository.createStatement(statement);
 
         if(String(rows) != '') {
             console.log("Id for token " + token + " not found")
             return rows[0].id;
         }
-
         return null;
-
     }
 
 
-
     async deleteTokenById(id) {
-
         console.log("Delete token with id: " + id);
 
         if(await this.checkIfTokenExistById(id) === false) {
@@ -90,14 +73,9 @@ class TokenService {
             console.log("Some error with deleting token.");
             return -2;
         }
-        else {
-            return 0;
-        }
-
+        return 0;
     }
-
 }
 
 
 module.exports = TokenService;
-

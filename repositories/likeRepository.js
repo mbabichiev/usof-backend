@@ -16,7 +16,6 @@ class LikeRepository extends Repository {
         
         this.createStatement(statement);
     }
-
 }
 
 module.exports = LikeRepository;

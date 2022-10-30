@@ -13,12 +13,13 @@ class PostRepository extends Repository {
             publish_date BIGINT NOT NULL,
             status VARCHAR(50) NOT NULL,
             content TEXT NOT NULL,
-            categories VARCHAR(100) NOT NULL
+            categories VARCHAR(100) NOT NULL,
+            likes BIGINT DEFAULT(0) NOT NULL,
+            dislikes BIGINT DEFAULT(0) NOT NULL
         );`
         
         this.createStatement(statement);
     }
-
 }
 
 module.exports = PostRepository;

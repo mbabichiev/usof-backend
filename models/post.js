@@ -1,14 +1,15 @@
 class Post {
 
-    constructor(author_id, title, publish_date, status, content, categories) {
+    constructor(author_id, title, publish_date, status, content, categories, likes, dislikes) {
         this.author_id = author_id;
         this.title = title;
         this.publish_date = publish_date;
         this.status = status;
         this.content = content;
         this.categories = categories;
+        this.likes = likes;
+        this.dislikes = dislikes;
     }
-
 
     getAuthorId() {
         return this.author_id;
@@ -34,6 +35,13 @@ class Post {
         return this.categories;
     }
 
+    getLikes() {
+        return this.likes;
+    }
+
+    getDislikes() {
+        return this.dislikes;
+    }
 }
 
 

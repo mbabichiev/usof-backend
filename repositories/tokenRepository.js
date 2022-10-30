@@ -10,10 +10,9 @@ class TokenRepository extends Repository {
              id BIGINT PRIMARY KEY,
              token VARCHAR(50) UNIQUE NOT NULL
         );`
-        
+
         this.createStatement(statement);
     }
-
 }
 
 module.exports = TokenRepository;

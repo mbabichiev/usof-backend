@@ -5,7 +5,6 @@ class Category {
         this.description = description;
     }
 
-    
     getTitle() {
         return this.title;
     }
@@ -13,7 +12,6 @@ class Category {
     getDescription() {
         return this.description;
     }
-
 }
 
 module.exports = Category;

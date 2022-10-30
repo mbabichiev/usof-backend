@@ -1,7 +1,5 @@
 const express = require("express");
-
 const categoryController = require("../controllers/categoryController.js")
-
 const categoryRouter = express.Router();
 
 categoryRouter.get("/:id/posts", categoryController.getAllPostsByCategoryId)

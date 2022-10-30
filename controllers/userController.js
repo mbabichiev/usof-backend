@@ -13,7 +13,6 @@ let photoUploader = new PhotoUploader();
 
 
 exports.createUser = async function (request, response) {
-
     if(!request.body.role) {
         request.body.role = "user";
     }
@@ -47,8 +46,11 @@ exports.createUser = async function (request, response) {
 
 
 exports.getUsers = async function(request, response) {
+    let data = [];
 
-    let data = await userService.getAllUsers();
+    if(request.query.limit && request.query.page && request.query.limit > 0 && request.query.page > 0) {
+        data = await userService.getPopularUsersByLimitAndPage(request.query.limit, request.query.page)
+    } 
 
     response.status(200).send({
         users: data
@@ -56,8 +58,24 @@ exports.getUsers = async function(request, response) {
 };
 
 
-exports.getUserById = async function(request, response) {
+exports.getUsersBySearch = async function(request, response) {
+    let data = [];
+    let users = await userService.getUsersBySearch(10, request.params.data);
 
+    for(var i = 0; users[i]; i++) {
+        data.push({
+            id: users[i].id,
+            full_name: users[i].full_name
+        })
+    }
+
+    response.status(200).send({
+        users: data
+    })
+}
+
+
+exports.getUserById = async function(request, response) {
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {
@@ -97,12 +115,10 @@ exports.getUserById = async function(request, response) {
     else {
         response.status(400).send("User is not found")
     }
-
 };
 
 
 exports.getUserAvatarById = function(request, response) {
-
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {
@@ -123,30 +139,49 @@ exports.getUserAvatarById = function(request, response) {
 }
 
 
-exports.getAllPostsByUserId = async function (request, response) {
+async function getPostsWithLimitByUserId(limit, page, sort, user_id) {
+    if(sort === "new") {
+        return await postService.getUsersCategoryByLimitAndPageSortNew(limit, page, user_id);
+    }
+    else if(sort === "old") {
+        return await postService.getUsersCategoryByLimitAndPageSortOld(limit, page, user_id);
+    }
+    else if(sort === "popular") {
+        return await postService.getUsersCategoryByLimitAndPageSortPopular(limit, page, user_id);
+    }
+    return [];
+}
 
+
+exports.getAllPostsByUserId = async function (request, response) {
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {
         return response.status(400).send();
     }
 
-    let data = await postService.getAllPostByUserId(id);
+    let data = []; //get all posts
+
+    if(request.query.limit && request.query.sort && request.query.page && request.query.limit > 0 && request.query.page > 0
+        && (request.query.sort === "popular" || request.query.sort === "old" || request.query.sort === "new")) {
+        data = await getPostsWithLimitByUserId(request.query.limit, request.query.page, request.query.sort, id);
+    } 
+
     let posts = []
 
     for(var i = 0; data[i]; i++) {
-        posts.push(await postMapper.getPostJSON(data[i]));
+        posts.push(
+            await postMapper.getPostJSON(data[i])
+        );
     }
 
     response.status(200).send({
         posts: posts
     })
-
 }
 
 
 exports.uploadAvatar = function (request, response) {
-
     if (!request.files || Object.keys(request.files).length === 0) {
         return response.status(400).send('No files were uploaded');
     }
@@ -187,21 +222,17 @@ exports.getDefaultAvatar = async function (request, response) {
 
 
 exports.deleteAvatarById = async function (request, response) {
-
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {
         return response.status(400).send();
     }
     photoUploader.deleteAvatarById(id);
-
     response.status(200).end()
 }
 
 
-
 exports.updateUser = async function (request, response) {
-
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {

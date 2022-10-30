@@ -4,7 +4,6 @@ const config = require('../resources/db.json');
 class Repository {
 
     async createStatement(statement) {
-
         let connection = mysql.createConnection({ 
             host     : config.db.host,
             user     : config.db.user,
@@ -26,10 +25,7 @@ class Repository {
         connection.end();
 
         return result;
-
     }
-
-
 }
 
 module.exports = Repository;

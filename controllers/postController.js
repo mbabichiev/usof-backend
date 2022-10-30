@@ -18,7 +18,6 @@ let photoUploader = new PhotoUploader();
 
 
 exports.createPost = async function (request, response){ 
-
     if(request.body.author_id && await userService.checkIfUserExistById(request.body.author_id) === false) {
         response.status(400).send("User not found");
         return;
@@ -53,21 +52,28 @@ exports.createPost = async function (request, response){
 }
 
 
-async function getPostsWithLimitAndPage(limit, page) {
-    return await postService.getPostsByLimitAndPage(limit, page);
+async function getPostsWithLimit(limit, page, sort) {
+    if(sort === "new") {
+        return await postService.getPostsByLimitAndPageSortNew(limit, page);
+    }
+    else if(sort === "old") {
+        return await postService.getPostsByLimitAndPageSortOld(limit, page);
+    }
+    else if(sort === "popular") {
+        return await postService.getPostsByLimitAndPageSortPopular(limit, page);
+    }
+    return [];
 }
 
 
 exports.getAllPosts = async function (request, response) {
-
     let data = [];
 
-    if(request.query.limit && request.query.page && request.query.limit > 0 && request.query.page > 0) {
-        data = await getPostsWithLimitAndPage(request.query.limit, request.query.page);
+    if(request.query.limit && request.query.sort && request.query.page && request.query.limit > 0 && request.query.page > 0
+        && (request.query.sort === "popular" || request.query.sort === "old" || request.query.sort === "new")) {
+
+        data = await getPostsWithLimit(request.query.limit, request.query.page, request.query.sort);
     } 
-    else {
-        data = await postService.getAllPosts();
-    }
 
     let posts = []
 
@@ -83,8 +89,25 @@ exports.getAllPosts = async function (request, response) {
 }
 
 
-exports.getPostById = async function (request, response) {
+exports.getPostsBySearch = async function(request, response) {
+    let data = [];
+    let posts = await postService.getPostsBySearch(10, request.params.data);
 
+    for(var i = 0; posts[i]; i++) {
+        data.push({
+            id: posts[i].id,
+            title: posts[i].title
+        })
+    }
+
+    response.status(200).send({
+        posts: data
+    })
+
+}
+
+
+exports.getPostById = async function (request, response) {
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {
@@ -105,7 +128,6 @@ exports.getPostById = async function (request, response) {
 
 
 exports.updatePostById = async function (request, response) {
-
     let id = request.params.id;
     if(!id.match(/^\d+$/)) {
         return response.status(400).send();
@@ -134,12 +156,10 @@ exports.updatePostById = async function (request, response) {
     else {
         response.status(500).send();
     }
-
 }
 
 
 exports.getPostPhotoById = async function(request, response) {
-    
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {
@@ -161,12 +181,10 @@ exports.getPostPhotoById = async function(request, response) {
             response.status(500).end()
         }
     })
-
 }
 
 
 exports.updatePostPhotoByPostId = async function(request, response) {
-
     if (!request.files || Object.keys(request.files).length === 0) {
         return response.status(400).send('No files were uploaded');
     }
@@ -191,9 +209,7 @@ exports.updatePostPhotoByPostId = async function(request, response) {
 }
 
 
-
 exports.deletePostPhotoByPostId = async function(request, response) {
-
     let id = request.params.id;
 
     if(!id.match(/^\d+$/)) {
@@ -201,14 +217,11 @@ exports.deletePostPhotoByPostId = async function(request, response) {
     }
     
     photoUploader.deletePostPhotoById(id);
-
     response.status(200).end()
 }
 
 
-
 exports.deletePostById = async function (request, response) {
-
     let id = request.params.id;
     if(!id.match(/^\d+$/)) {
         return response.status(400).send();
@@ -225,13 +238,10 @@ exports.deletePostById = async function (request, response) {
     else {
         response.status(500).send();
     }
-
 }
 
 
-
 exports.getCategoriesByPostId = async function (request, response) {
-
     let id = request.params.id;
     if(!id.match(/^\d+$/)) {
         return response.status(400).send();
@@ -253,7 +263,6 @@ exports.getCategoriesByPostId = async function (request, response) {
         })
     }
 }
-
 
 
 exports.getLikesByPostId = async function (request, response) { 
@@ -289,9 +298,7 @@ exports.getLikesByPostId = async function (request, response) {
 }
 
 
-
 exports.checkForLikeByPostId = async function (request, response) {
-
     let post_id = request.params.id;
     if(!post_id.match(/^\d+$/)) {
         return response.status(400).send();
@@ -304,13 +311,10 @@ exports.checkForLikeByPostId = async function (request, response) {
     let data = await likeService.getLikeIfExistByPostId(request.body.author_id, post_id);
 
     response.status(200).send(data);
-
 }
 
 
-
 exports.createLikeUnderPost = async function (request, response) { 
-
     let post_id = request.params.id;
     if(!post_id.match(/^\d+$/)) {
         return response.status(400).send();
@@ -346,9 +350,7 @@ exports.createLikeUnderPost = async function (request, response) {
 }
 
 
-
 exports.deleteLikeUnderPost = async function (request, response) { 
-
     let post_id = request.params.id;
 
     if(!post_id.match(/^\d+$/)) {
@@ -372,6 +374,5 @@ exports.deleteLikeUnderPost = async function (request, response) {
     else {
         response.status(500).send();
     }
-
 }
 

@@ -37,7 +37,6 @@ class User {
     getRole() {
         return this.role;
     }
-
 }
 
 module.exports = User;

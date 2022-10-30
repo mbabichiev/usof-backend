@@ -11,10 +11,9 @@ class CategoryRepository extends Repository {
             title VARCHAR(50) NOT NULL,
             description TEXT NOT NULL
         );`
-        
+
         this.createStatement(statement);
     }
-
 }
 
 module.exports = CategoryRepository;

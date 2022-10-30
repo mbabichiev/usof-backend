@@ -7,7 +7,6 @@ class Like {
         this.type = type;
     }
 
-    
     getAuthorId() {
         return this.author_id;
     }
@@ -23,7 +22,6 @@ class Like {
     getType() {
         return this.type;
     }
-
 }
 
 module.exports = Like;
